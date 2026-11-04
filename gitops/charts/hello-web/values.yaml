@@ -12,6 +12,14 @@ resources:
   limits:
     memory: 128Mi
 
+# Spread replicas across nodes. ScheduleAnyway = best effort, so pods still
+# schedule if a node is down (DoNotSchedule would leave them Pending).
+topologySpread:
+  enabled: true
+  maxSkew: 1
+  topologyKey: kubernetes.io/hostname
+  whenUnsatisfiable: ScheduleAnyway
+
 service:
   port: 80
 
