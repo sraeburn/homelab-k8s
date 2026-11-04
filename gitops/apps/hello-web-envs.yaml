@@ -15,9 +15,11 @@ spec:
           - env: dev
             replicas: "1"
             host: dev.hello.k3s.lan
+            tag: "1.28"
           - env: prod
             replicas: "3"
             host: prod.hello.k3s.lan
+            tag: "1.27"
   template:
     metadata:
       name: 'hello-web-{{ .env }}'
@@ -33,6 +35,8 @@ spec:
               value: '{{ .replicas }}'
             - name: ingress.host
               value: '{{ .host }}'
+            - name: image.tag
+              value: '{{ .tag }}'
       destination:
         server: https://kubernetes.default.svc
         namespace: 'hello-{{ .env }}'
