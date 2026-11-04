@@ -18,11 +18,17 @@ provider "proxmox" {
   }
 }
 
-# Cloud image downloaded once to the first node's storage.
+# "local" storage is per-node, so each node needs its own copy of the image.
+moved {
+  from = proxmox_virtual_environment_download_file.image
+  to   = proxmox_virtual_environment_download_file.image["pve1"]
+}
+
 resource "proxmox_virtual_environment_download_file" "image" {
+  for_each     = { for n in var.nodes : n.name => n }
   content_type = "iso"
   datastore_id = var.iso_datastore
-  node_name    = var.nodes[0].name
+  node_name    = each.value.name
   url          = var.image_url
   file_name    = "k3s-base-cloudimg.img"
 }
@@ -33,7 +39,8 @@ resource "proxmox_virtual_environment_vm" "k3s" {
   node_name = each.value.name
   tags      = ["k3s", each.value.role]
 
-  agent { enabled = true }
+  # Ubuntu cloud images ship without qemu-guest-agent; waiting for it hangs apply.
+  agent { enabled = false }
 
   cpu {
     cores = var.vm_cores
@@ -43,7 +50,7 @@ resource "proxmox_virtual_environment_vm" "k3s" {
 
   disk {
     datastore_id = var.vm_datastore
-    file_id      = proxmox_virtual_environment_download_file.image.id
+    file_id      = proxmox_virtual_environment_download_file.image[each.key].id
     interface    = "scsi0"
     size         = var.vm_disk_gb
     discard      = "on"
