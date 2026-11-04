@@ -13,11 +13,11 @@ spec:
     - list:
         elements:
           - env: dev
-            replicas: "1"
+            replicas: "2"
             host: dev.hello.k3s.lan
             tag: "1.28"
           - env: prod
-            replicas: "3"
+            replicas: "4"
             host: prod.hello.k3s.lan
             tag: "1.27"
   template:
