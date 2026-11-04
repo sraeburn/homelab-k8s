@@ -1,0 +1,6 @@
+apiVersion: v2
+name: hello-web
+description: Starter chart for learning Helm
+type: application
+version: 0.1.0
+appVersion: "1.27"

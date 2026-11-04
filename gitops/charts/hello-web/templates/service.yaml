@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "hello-web.fullname" . }}
+  labels:
+    {{- include "hello-web.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "hello-web.selectorLabels" . | nindent 4 }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: 80

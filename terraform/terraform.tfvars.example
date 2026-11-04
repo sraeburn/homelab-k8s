@@ -1,0 +1,9 @@
+pve_endpoint  = "https://pve1.lan:8006/"
+pve_api_token = "root@pam!terraform=REPLACE_ME"
+gateway       = "192.168.1.1"
+
+nodes = [
+  { name = "pve1", vm_name = "k3s-server", ip = "192.168.1.51", role = "server" },
+  { name = "pve2", vm_name = "k3s-agent1", ip = "192.168.1.52", role = "agent" },
+  { name = "pve3", vm_name = "k3s-agent2", ip = "192.168.1.53", role = "agent" },
+]

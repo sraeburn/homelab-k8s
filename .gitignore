@@ -1,0 +1,5 @@
+terraform/.terraform/
+terraform/*.tfstate*
+terraform/terraform.tfvars
+ansible/inventory.ini
+*.kubeconfig

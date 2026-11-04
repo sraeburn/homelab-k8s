@@ -1,0 +1,13 @@
+replicaCount: 2
+
+image:
+  repository: nginx
+  tag: ""          # defaults to Chart.appVersion
+  pullPolicy: IfNotPresent
+
+service:
+  port: 80
+
+ingress:
+  enabled: true
+  host: hello.k3s.lan
