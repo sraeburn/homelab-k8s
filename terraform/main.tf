@@ -45,6 +45,28 @@ moved {
   to   = proxmox_virtual_environment_vm.k3s["k3s-agent1"]
 }
 
+# cloud-init vendor data: installs the guest agent on first boot, so VMs
+# created with agent { enabled = true } don't hang waiting for it.
+# Needs "Snippets" enabled in the content types of var.snippets_datastore
+# (Proxmox: Datacenter > Storage > local > Content).
+resource "proxmox_virtual_environment_file" "vendor" {
+  for_each     = toset([for n in var.nodes : n.name])
+  content_type = "snippets"
+  datastore_id = var.snippets_datastore
+  node_name    = each.key
+
+  source_raw {
+    file_name = "k3s-vendor.yaml"
+    data      = <<-EOT
+      #cloud-config
+      packages:
+        - qemu-guest-agent
+      runcmd:
+        - systemctl enable --now qemu-guest-agent
+    EOT
+  }
+}
+
 resource "proxmox_virtual_environment_vm" "k3s" {
   for_each  = { for n in var.nodes : n.vm_name => n }
   name      = each.value.vm_name
@@ -76,7 +98,8 @@ resource "proxmox_virtual_environment_vm" "k3s" {
   }
 
   initialization {
-    datastore_id = var.vm_datastore
+    datastore_id        = var.vm_datastore
+    vendor_data_file_id = proxmox_virtual_environment_file.vendor[each.value.name].id
     ip_config {
       ipv4 {
         address = "${each.value.ip}/${var.cidr_prefix}"
@@ -91,4 +114,10 @@ resource "proxmox_virtual_environment_vm" "k3s" {
   }
 
   operating_system { type = "l26" }
+
+  # The vendor-data snippet only matters on first boot. Ignoring it keeps
+  # existing VMs untouched (no cloud-init drive rebuild, no restart).
+  lifecycle {
+    ignore_changes = [initialization[0].vendor_data_file_id]
+  }
 }

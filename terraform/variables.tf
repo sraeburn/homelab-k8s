@@ -34,6 +34,12 @@ variable "iso_datastore" {
   default = "local"
 }
 
+variable "snippets_datastore" {
+  type        = string
+  default     = "local"
+  description = "Storage with the Snippets content type enabled (holds cloud-init vendor data)"
+}
+
 variable "vm_datastore" {
   type    = string
   default = "local-lvm"

@@ -82,7 +82,7 @@ kubectl apply -f gitops/bootstrap/root-app.yaml
 ## Gotchas learned
 - **Don't interrupt `terraform apply`:** killing a hung apply leaves VMs in Proxmox that Terraform doesn't know about. A second VM with the same IP then breaks everything intermittently (flaky downloads, host-key changes). Check Proxmox for duplicates.
 - **Guest agent:** Ubuntu cloud images have no `qemu-guest-agent`. The playbook installs it and `main.tf` sets `agent { enabled = true }`, so Proxmox shows real IP and memory (with the agent off, the memory bar can read over 100% because it counts the guest's page cache).
-  **New VMs will hang `terraform apply` for ~15 min** because the package isn't there on first boot. For a new node: temporarily set `enabled = false`, apply, run the playbook, set it back to `true`, then apply with `-target` one node at a time (drain first; the provider restarts the VM). Proper fix (todo): install the package via cloud-init.
+  New VMs get the package on first boot from a cloud-init vendor-data snippet (`proxmox_virtual_environment_file.vendor` in `main.tf`; needs the Snippets content type on the `local` storage). **Not yet tested on a new VM:** if the first new node (pve3's agent) hangs `terraform apply` for ~15 min, the snippet didn't run; check `/var/log/cloud-init.log` on the VM, and as a fallback set `enabled = false` for that apply, run the playbook, then set it back and apply with `-target` (drain first; the provider restarts the VM). The snippet is excluded from updates (`ignore_changes`), so existing VMs are never touched by it.
 - **Image storage is per node:** `local` storage isn't shared, so the cloud image is downloaded once per Proxmox node.
 - **SSH to Proxmox:** the bpg provider needs root SSH to each PVE node (key loaded in ssh-agent) to import disks.
 - **k3s installer downloads are flaky:** the playbook retries the install 3 times; it's guarded by `creates:`, so re-running is safe.
@@ -108,7 +108,7 @@ kubectl apply -f gitops/bootstrap/root-app.yaml
   2. `brew install argoproj/tap/kubectl-argo-rollouts` for the plugin and dashboard.
   3. Add a chart flag so `hello-web` can render a `Rollout` (canary strategy) instead of a `Deployment`, and try it in **dev** first.
   4. Optional: manual sync gate for prod (remove `automated` from prod's sync policy in the ApplicationSet).
-- **Bring pve3 back:** uncomment the `k3s-agent3` line in `terraform.tfvars`, `terraform apply`, regenerate the inventory, re-run the playbook. Mind the guest-agent caveat above, or fix it first with cloud-init.
+- **Bring pve3 back:** uncomment the `k3s-agent3` line in `terraform.tfvars`, `terraform apply`, regenerate the inventory, re-run the playbook. This is the first real test of the cloud-init guest-agent snippet (see the guest-agent gotcha).
 
 ## Teardown
 `terraform destroy` in `terraform/`.
