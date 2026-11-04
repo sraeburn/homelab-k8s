@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  project: default
+  sources:
+    - repoURL: https://argoproj.github.io/argo-helm
+      chart: argo-cd
+      targetRevision: 10.11.7
+      helm:
+        releaseName: argocd
+        valueFiles:
+          - $values/gitops/argocd/values.yaml
+    - repoURL: https://github.com/sraeburn/homelab-k8s.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  # Keep the admin password ArgoCD wrote into argocd-secret.
+  ignoreDifferences:
+    - kind: Secret
+      name: argocd-secret
+      jsonPointers:
+        - /data
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: false   # first adoption: never delete anything the chart doesn't render
+    syncOptions:
+      - ServerSideApply=true   # ArgoCD CRDs exceed the client-side annotation size limit
