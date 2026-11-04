@@ -48,6 +48,10 @@ kubectl apply -f gitops/bootstrap/root-app.yaml
 ## Day-to-day
 - **Deploy a change:** edit under `gitops/`, commit, push. ArgoCD polls about every 3 min; force it with
   `kubectl -n argocd annotate application <app> argocd.argoproj.io/refresh=hard --overwrite`.
+- **Open the ArgoCD UI:** run `kubectl -n argocd port-forward svc/argocd-server 8080:443` in its own terminal
+  (it blocks; restart it if ArgoCD pods restart), then browse to https://localhost:8080 and log in as `admin`.
+  Initial password: `kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d`
+  (only valid until you change it).
 - **Open hello-web:** http://192.168.1.40 (any node IP; the Ingress has no host rule).
 - **Add a node:** add an entry to `var.nodes` in `terraform.tfvars` (VMs are keyed by `vm_name`, so several can share a Proxmox node), `terraform apply`, regenerate the inventory, re-run the playbook. Existing nodes are skipped.
 - **Upgrade ArgoCD:** bump `targetRevision` in `gitops/apps/argocd.yaml` and push.
