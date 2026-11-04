@@ -51,8 +51,10 @@ resource "proxmox_virtual_environment_vm" "k3s" {
   node_name = each.value.name
   tags      = ["k3s", each.value.role]
 
-  # Ubuntu cloud images ship without qemu-guest-agent; waiting for it hangs apply.
-  agent { enabled = false }
+  # Ubuntu cloud images ship without qemu-guest-agent; the Ansible playbook
+  # installs it. Don't enable this on a VM before the package is installed,
+  # or apply waits 15 min for an agent that never reports.
+  agent { enabled = true }
 
   cpu {
     cores = var.vm_cores
