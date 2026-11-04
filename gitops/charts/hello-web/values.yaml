@@ -5,6 +5,13 @@ image:
   tag: ""          # defaults to Chart.appVersion
   pullPolicy: IfNotPresent
 
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 128Mi
+
 service:
   port: 80
 
