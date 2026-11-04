@@ -25,16 +25,28 @@ moved {
 }
 
 resource "proxmox_virtual_environment_download_file" "image" {
-  for_each     = { for n in var.nodes : n.name => n }
+  for_each     = toset([for n in var.nodes : n.name])
   content_type = "iso"
   datastore_id = var.iso_datastore
-  node_name    = each.value.name
+  node_name    = each.key
   url          = var.image_url
   file_name    = "k3s-base-cloudimg.img"
 }
 
+# VMs are keyed by VM name (several VMs may share a Proxmox node).
+# These keep the originally created VMs from being destroyed on re-key.
+moved {
+  from = proxmox_virtual_environment_vm.k3s["pve1"]
+  to   = proxmox_virtual_environment_vm.k3s["k3s-server"]
+}
+
+moved {
+  from = proxmox_virtual_environment_vm.k3s["pve2"]
+  to   = proxmox_virtual_environment_vm.k3s["k3s-agent1"]
+}
+
 resource "proxmox_virtual_environment_vm" "k3s" {
-  for_each  = { for n in var.nodes : n.name => n }
+  for_each  = { for n in var.nodes : n.vm_name => n }
   name      = each.value.vm_name
   node_name = each.value.name
   tags      = ["k3s", each.value.role]
@@ -50,7 +62,7 @@ resource "proxmox_virtual_environment_vm" "k3s" {
 
   disk {
     datastore_id = var.vm_datastore
-    file_id      = proxmox_virtual_environment_download_file.image[each.key].id
+    file_id      = proxmox_virtual_environment_download_file.image[each.value.name].id
     interface    = "scsi0"
     size         = var.vm_disk_gb
     discard      = "on"
