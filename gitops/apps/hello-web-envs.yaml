@@ -1,0 +1,44 @@
+# One template, two environments: generates Applications hello-web-dev and
+# hello-web-prod from the same chart, each in its own namespace.
+# To add an environment, add an element to the list below.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: hello-web-envs
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - list:
+        elements:
+          - env: dev
+            replicas: "1"
+            host: dev.hello.k3s.lan
+          - env: prod
+            replicas: "3"
+            host: prod.hello.k3s.lan
+  template:
+    metadata:
+      name: 'hello-web-{{ .env }}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/sraeburn/homelab-k8s.git
+        targetRevision: main
+        path: gitops/charts/hello-web
+        helm:
+          parameters:
+            - name: replicaCount
+              value: '{{ .replicas }}'
+            - name: ingress.host
+              value: '{{ .host }}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: 'hello-{{ .env }}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
