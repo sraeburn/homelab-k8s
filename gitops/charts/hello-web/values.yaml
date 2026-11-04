@@ -10,4 +10,4 @@ service:
 
 ingress:
   enabled: true
-  host: hello.k3s.lan
+  host: ""         # empty = match any host (reachable via node IP)
