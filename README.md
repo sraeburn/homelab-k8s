@@ -108,7 +108,7 @@ kubectl apply -f gitops/bootstrap/root-app.yaml
   2. `brew install argoproj/tap/kubectl-argo-rollouts` for the plugin and dashboard.
   3. Add a chart flag so `hello-web` can render a `Rollout` (canary strategy) instead of a `Deployment`, and try it in **dev** first.
   4. Optional: manual sync gate for prod (remove `automated` from prod's sync policy in the ApplicationSet).
-- **Bring pve3 back:** uncomment the `k3s-agent3` line in `terraform.tfvars`, `terraform apply`, regenerate the inventory, re-run the playbook. This is the first real test of the cloud-init guest-agent snippet (see the guest-agent gotcha).
+- **Bring pve3 back:** uncomment the `k3s-agent3` line in `terraform.tfvars`, `terraform apply`, regenerate the inventory, re-run the playbook. New VMs get the guest agent automatically from cloud-init (see the guest-agent gotcha).
 
 ## Teardown
 `terraform destroy` in `terraform/`.
