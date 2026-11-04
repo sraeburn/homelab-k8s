@@ -1,0 +1,21 @@
+# Helm values for Headlamp (headlamp/headlamp chart), managed by the
+# "headlamp" Application in gitops/apps/headlamp.yaml.
+#
+# The chart creates a ServiceAccount bound to cluster-admin
+# (clusterRoleBinding.create: true, clusterRoleName: cluster-admin by default).
+# Log in with a token: kubectl -n headlamp create token headlamp
+ingress:
+  enabled: true
+  ingressClassName: traefik
+  hosts:
+    - host: headlamp.k3s.lan
+      paths:
+        - path: /
+          type: Prefix
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 64Mi
+  limits:
+    memory: 256Mi
