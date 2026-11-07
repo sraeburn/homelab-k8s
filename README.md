@@ -77,6 +77,10 @@ kubectl apply -f gitops/bootstrap/root-app.yaml
 - **Open dev / prod:** add the names to `/etc/hosts` (no wildcards there; needs sudo):
   `echo "192.168.1.40 dev.hello.k3s.lan prod.hello.k3s.lan" | sudo tee -a /etc/hosts`
   then browse to http://dev.hello.k3s.lan and http://prod.hello.k3s.lan.
+- **Network-wide names:** the nodes are on the Default VLAN (192.168.1.0/24), so clients there need no firewall change.
+  Add a local DNS record on the Cloud Gateway Max for `*.k3s.lan` -> 192.168.1.40 (or one A record per name) instead of editing every `/etc/hosts`.
+  Note this targets one node; a VIP would remove that single point of failure.
+  Other VLANs (Homelab, Guest, IOT) need a firewall rule for TCP 80 to 192.168.1.40-43 if access is wanted.
 - **Scale or re-version an env:** change `replicas` / `tag` in `gitops/apps/hello-web-envs.yaml`, push. Promote to prod by setting prod's `tag` to the version dev has been running; roll back with `git revert`.
 - **Recreate an env's pods without a version change:** `kubectl -n hello-prod rollout restart deployment/hello-web-prod`
   (rolling, no downtime; ArgoCD does not revert it).
