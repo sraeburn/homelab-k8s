@@ -56,7 +56,7 @@ kubectl get nodes
 helm repo add argo https://argoproj.github.io/argo-helm
 helm install argocd argo/argo-cd -n argocd --create-namespace --version 10.11.7
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d
-kubectl -n argocd port-forward svc/argocd-server 8080:443   # https://localhost:8080
+kubectl -n argocd port-forward svc/argocd-server 8080:443   # https://localhost:8080 (before the Traefik ingress exists)
 
 # 4. GitOps: push this repo to GitHub, then
 kubectl apply -f gitops/bootstrap/root-app.yaml
@@ -80,15 +80,14 @@ Prometheus + Grafana (kube-prometheus-stack) scrape Kubernetes, ArgoCD, and any 
 ## Day-to-day
 - **Deploy a change:** edit under `gitops/`, commit, push. ArgoCD polls about every 3 min; force it with
   `kubectl -n argocd annotate application <app> argocd.argoproj.io/refresh=hard --overwrite`.
-- **ArgoCD admin (UI / CLI) via tunnel:** ArgoCD has no Ingress, so tunnel in with `kubectl port-forward`
-  (needs cluster access: `~/.kube/config` context `homelab-k3s`, or `export KUBECONFIG=ansible/k3s.kubeconfig`).
-  1. In its own terminal (it blocks; restart it if ArgoCD pods restart):
-     `kubectl -n argocd port-forward svc/argocd-server 8080:443`
-  2. Get the password (only exists until you delete the secret):
+- **ArgoCD admin (UI / CLI):** served by Traefik at http://argocd.k3s.lan (plain HTTP, `server.insecure`; needs the
+  `*.k3s.lan` DNS record or an `/etc/hosts` entry).
+  1. Get the password (only exists until you delete the secret; needs cluster access, `~/.kube/config` context `homelab-k3s`):
      `kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d; echo`
-  3. UI: browse to https://localhost:8080 (accept the self-signed cert warning), log in as `admin`.
-  4. CLI: `argocd login localhost:8080 --username admin --insecure --grpc-web` (then e.g. `argocd app list`).
-  5. Optional: `argocd account update-password`, then `kubectl -n argocd delete secret argocd-initial-admin-secret`.
+  2. UI: browse to http://argocd.k3s.lan and log in as `admin`.
+  3. CLI: `argocd login argocd.k3s.lan --username admin --plaintext --grpc-web` (then e.g. `argocd app list`).
+  4. Recommended: `argocd account update-password`, then `kubectl -n argocd delete secret argocd-initial-admin-secret`.
+  Fallback if DNS or Traefik is down: `kubectl -n argocd port-forward svc/argocd-server 8080:80`, then http://localhost:8080.
 - **Open dev / prod:** add the names to `/etc/hosts` (no wildcards there; needs sudo):
   `echo "192.168.1.40 dev.hello.k3s.lan prod.hello.k3s.lan" | sudo tee -a /etc/hosts`
   then browse to http://dev.hello.k3s.lan and http://prod.hello.k3s.lan.

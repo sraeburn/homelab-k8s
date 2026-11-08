@@ -9,7 +9,16 @@ controller:
     requests: { cpu: 100m, memory: 256Mi }
     limits: { memory: 768Mi }
 
+# Traefik terminates traffic and talks plain HTTP to argocd-server.
+configs:
+  params:
+    server.insecure: true
+
 server:
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hostname: argocd.k3s.lan
   metrics:
     enabled: true
     serviceMonitor:
