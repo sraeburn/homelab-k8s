@@ -18,10 +18,17 @@ spec:
         - name: todo
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{- if and .Values.metrics.enabled .Values.metrics.histogram }}
+          {{- $histogram := and .Values.metrics.enabled .Values.metrics.histogram }}
+          {{- if or $histogram .Values.tracing.enabled }}
           env:
+            {{- if $histogram }}
             - name: SPRING_APPLICATION_JSON
               value: '{"management":{"metrics":{"distribution":{"percentiles-histogram":{"http.server.requests":true}}}}}'
+            {{- end }}
+            {{- if .Values.tracing.enabled }}
+            - name: MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT
+              value: {{ .Values.tracing.endpoint | quote }}
+            {{- end }}
           {{- end }}
           ports:
             - name: http

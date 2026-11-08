@@ -26,3 +26,8 @@ metrics:
   # Export http_server_requests_seconds_bucket so Grafana can show p50/p95/p99.
   # Set through SPRING_APPLICATION_JSON, so no image rebuild is needed.
   histogram: true
+
+# Export OTLP traces to Tempo (the app needs 0.4.0+, which ships the OpenTelemetry starter).
+tracing:
+  enabled: true
+  endpoint: http://tempo.tracing:4318/v1/traces

@@ -3,4 +3,4 @@ name: todo
 description: Spring Boot todo REST API (github.com/sraeburn/todo)
 type: application
 version: 0.1.0
-appVersion: "0.3.0"
+appVersion: "0.4.0"
