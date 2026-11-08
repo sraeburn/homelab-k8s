@@ -193,7 +193,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum(rate(http_server_requests_seconds_count{namespace=~\"$namespace\",pod=~\"$pod\",status=~\"5..\"}[$__rate_interval])) / clamp_min(sum(rate(http_server_requests_seconds_count{namespace=~\"$namespace\",pod=~\"$pod\"}[$__rate_interval])), 1e-9)",
+              "expr": "(sum(rate(http_server_requests_seconds_count{namespace=~\"$namespace\",pod=~\"$pod\",status=~\"5..\"}[$__rate_interval])) or vector(0)) / clamp_min(sum(rate(http_server_requests_seconds_count{namespace=~\"$namespace\",pod=~\"$pod\"}[$__rate_interval])), 1e-9)",
               "legendFormat": "",
               "refId": "A"
             }
