@@ -11,6 +11,9 @@ spec:
     targetRevision: 0.16.2
     helm:
       releaseName: metallb
+      valuesObject:
+        frrk8s:
+          enabled: false   # BGP backend; only L2 is used here
   destination:
     server: https://kubernetes.default.svc
     namespace: metallb-system
