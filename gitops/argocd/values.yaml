@@ -1,21 +1,37 @@
 # Helm values for ArgoCD itself (argo/argo-cd chart), managed by the
 # "argocd" Application in gitops/apps/argocd.yaml.
 controller:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
   resources:
     requests: { cpu: 100m, memory: 256Mi }
     limits: { memory: 768Mi }
 
 server:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
   resources:
     requests: { cpu: 50m, memory: 128Mi }
     limits: { memory: 256Mi }
 
 repoServer:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
   resources:
     requests: { cpu: 50m, memory: 128Mi }
     limits: { memory: 512Mi }
 
 applicationSet:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
   resources:
     requests: { cpu: 25m, memory: 64Mi }
     limits: { memory: 128Mi }
