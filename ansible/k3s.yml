@@ -26,6 +26,16 @@
       delay: 10
       until: k3s_server_install is succeeded
 
+    # MetalLB (gitops/metallb) owns LoadBalancer IPs, so turn off k3s's built-in ServiceLB.
+    - name: Configure k3s server
+      ansible.builtin.copy:
+        dest: /etc/rancher/k3s/config.yaml
+        content: |
+          disable:
+            - servicelb
+        mode: "0644"
+      notify: Restart k3s
+
     - name: Read node token
       ansible.builtin.slurp:
         src: /var/lib/rancher/k3s/server/node-token
@@ -36,6 +46,12 @@
         src: /etc/rancher/k3s/k3s.yaml
         dest: "{{ playbook_dir }}/k3s.kubeconfig"
         flat: true
+
+  handlers:
+    - name: Restart k3s
+      ansible.builtin.systemd:
+        name: k3s
+        state: restarted
 
 - name: k3s agents
   hosts: agent
