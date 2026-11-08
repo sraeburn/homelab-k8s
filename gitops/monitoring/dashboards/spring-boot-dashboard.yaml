@@ -596,7 +596,7 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "sum(http_server_requests_active_seconds_count{namespace=~\"$namespace\",pod=~\"$pod\"})",
+              "expr": "sum(http_server_requests_active_seconds_count{namespace=~\"$namespace\",pod=~\"$pod\"}) or vector(0)",
               "legendFormat": "in flight",
               "refId": "A"
             }
