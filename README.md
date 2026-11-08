@@ -32,6 +32,7 @@ gitops/charts/        own charts (hello-web)
 | `traefik-config` | `gitops/traefik/` | k3s HelmChartConfig: Traefik at 2 replicas, pinned to the VIP |
 | `monitoring` | kube-prometheus-stack 93.1.0 + `gitops/monitoring/` | Prometheus + Grafana (`grafana.k3s.lan`), 7d retention on a `local-path` PVC, Alertmanager off |
 | `loki`, `alloy` | grafana charts 7.5.0 / 1.15.0 + `gitops/loki/`, `gitops/alloy/` | Loki (single binary, 7d retention, 5Gi `local-path` PVC) + Alloy DaemonSet shipping all pod logs; see Logging |
+| `tempo` | grafana-community tempo chart 3.2.1 + `gitops/tempo/` | Tempo (single binary, 7d retention, 5Gi `local-path` PVC) in the `tracing` namespace, OTLP on 4317/4318; see Tracing |
 | `hello-web-dev`, `hello-web-prod` | ApplicationSet `hello-web-envs` | one template, per-env replicas / image tag / host |
 
 Environments (edit the list in `gitops/apps/hello-web-envs.yaml`):
@@ -88,6 +89,15 @@ Alloy (one pod per node) tails every pod's logs through the Kubernetes API and p
 - **Query:** Grafana (http://grafana.k3s.lan) > Explore > Loki datasource, e.g. `{namespace="todo"}` or `{namespace="argocd", app="argocd-server"}`.
 - **Labels:** `namespace`, `pod`, `container`, `app`. `app` comes from `app.kubernetes.io/name` or `app`, so pods that only set `k8s-app` (e.g. coredns) have none.
 - **Retention:** 7d, 5Gi `local-path` volume. That volume cannot be resized in place, and it is lost with its node.
+
+## Tracing
+Traefik and the todo app (0.4.0+) send OTLP traces straight to Tempo (`http://tempo.tracing:4318`). A request to `todo.k3s.lan` becomes one trace: Traefik > the todo HTTP span > its JDBC `connection` / `query` spans. Sampling is 100%. Actuator requests (Prometheus scrapes, probes) are not traced.
+
+- **Find traces:** Grafana (http://grafana.k3s.lan) > Explore > Tempo, then Search (service `traefik` or `todo`) or TraceQL, e.g. `{ name = "http post /api/todos" } >> { name = "query" }`.
+- **Logs <-> traces:** the todo JSON logs carry `traceId`. In Explore > Loki the `TraceID` link opens the trace; in a trace, the logs button runs `{namespace=~".+"} |= "<traceId>"` against Loki.
+- **Turn tracing off for the app:** set `tracing.enabled: false` in `gitops/charts/todo/values.yaml` (the app then exports nothing and keeps serving requests; it also keeps working while Tempo is down).
+- **Trace another app:** export OTLP/HTTP to `http://tempo.tracing:4318/v1/traces` with a `service.name`; Traefik already forwards the W3C `traceparent` header.
+- **Caveat:** the 5Gi `local-path` volume cannot be resized in place and is lost with its node.
 
 ## Day-to-day
 - **Deploy a change:** edit under `gitops/`, commit, push. ArgoCD polls about every 3 min; force it with
