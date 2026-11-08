@@ -1,0 +1,13 @@
+# Customizes the Traefik that k3s ships (applied by the k3s helm controller).
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    deployment:
+      replicas: 2
+    service:
+      annotations:
+        metallb.io/loadBalancerIPs: 192.168.1.45
