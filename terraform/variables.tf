@@ -86,7 +86,7 @@ variable "vm_cores" {
 
 variable "vm_memory_mb" {
   type    = number
-  default = 4096
+  default = 8192
 }
 
 variable "vm_disk_gb" {
