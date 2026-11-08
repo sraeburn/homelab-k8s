@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: notify
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/sraeburn/homelab-k8s.git
+    targetRevision: main
+    path: gitops/charts/demo-service
+    helm:
+      valuesObject:
+        downstreamUrl: http://audit.demo/api/work
+        chaos:
+          errorRate: 0.08
+          maxDelayMs: 120
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: demo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

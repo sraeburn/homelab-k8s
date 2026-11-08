@@ -33,3 +33,8 @@ tracing:
   endpoint: http://tempo.tracing:4318/v1/traces
   # Push OTLP metrics (OpenTelemetry HTTP names) to Prometheus's OTLP receiver; empty disables.
   metricsEndpoint: http://monitoring-kube-prometheus-prometheus.monitoring:9090/api/v1/otlp/v1/metrics
+
+# Demo services the API calls to build multi-service traces (needs todo 0.5.0+); empty disables a call.
+downstream:
+  notifyUrl: http://notify.demo/api/work   # on create
+  auditUrl: http://audit.demo/api/work     # on complete and delete

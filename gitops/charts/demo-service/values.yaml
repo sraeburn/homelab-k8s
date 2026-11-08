@@ -1,0 +1,34 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/sraeburn/demo-service
+  tag: ""          # defaults to Chart.appVersion
+  pullPolicy: IfNotPresent
+
+# Shown as the service name in traces and the service map; defaults to the release name.
+serviceName: ""
+
+# Service this one calls from /api/work; empty for a leaf service.
+downstreamUrl: ""
+
+# Simulated behaviour (see the demo block in the app's application.yml).
+chaos:
+  minDelayMs: 5
+  maxDelayMs: 50
+  slowRate: 0.05
+  slowDelayMs: 800
+  errorRate: 0.05
+
+tracing:
+  endpoint: http://tempo.tracing:4318/v1/traces
+  metricsEndpoint: http://monitoring-kube-prometheus-prometheus.monitoring:9090/api/v1/otlp/v1/metrics
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 256Mi
+  limits:
+    memory: 384Mi
+
+service:
+  port: 80

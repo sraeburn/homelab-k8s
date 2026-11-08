@@ -19,11 +19,19 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           {{- $histogram := and .Values.metrics.enabled .Values.metrics.histogram }}
-          {{- if or $histogram .Values.tracing.enabled }}
+          {{- if or $histogram .Values.tracing.enabled .Values.downstream.notifyUrl .Values.downstream.auditUrl }}
           env:
             {{- if $histogram }}
             - name: SPRING_APPLICATION_JSON
               value: '{"management":{"metrics":{"distribution":{"percentiles-histogram":{"http.server.requests":true}}}}}'
+            {{- end }}
+            {{- if .Values.downstream.notifyUrl }}
+            - name: TODO_NOTIFY_URL
+              value: {{ .Values.downstream.notifyUrl | quote }}
+            {{- end }}
+            {{- if .Values.downstream.auditUrl }}
+            - name: TODO_AUDIT_URL
+              value: {{ .Values.downstream.auditUrl | quote }}
             {{- end }}
             {{- if .Values.tracing.enabled }}
             - name: MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT

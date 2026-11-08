@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: audit
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/sraeburn/homelab-k8s.git
+    targetRevision: main
+    path: gitops/charts/demo-service
+    helm:
+      valuesObject:
+        chaos:
+          errorRate: 0.03
+          slowRate: 0.1
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: demo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -12,7 +12,7 @@ spec:
     helm:
       parameters:
         - name: image.tag
-          value: "0.4.3"
+          value: "0.5.0"
   destination:
     server: https://kubernetes.default.svc
     namespace: todo

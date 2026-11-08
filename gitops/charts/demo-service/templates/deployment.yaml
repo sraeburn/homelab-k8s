@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    {{- include "demo-service.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "demo-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "demo-service.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: demo-service
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: SERVICE_NAME
+              value: {{ .Values.serviceName | default .Release.Name | quote }}
+            - name: DEMO_DOWNSTREAM_URL
+              value: {{ .Values.downstreamUrl | quote }}
+            - name: DEMO_MIN_DELAY_MS
+              value: {{ .Values.chaos.minDelayMs | quote }}
+            - name: DEMO_MAX_DELAY_MS
+              value: {{ .Values.chaos.maxDelayMs | quote }}
+            - name: DEMO_SLOW_RATE
+              value: {{ .Values.chaos.slowRate | quote }}
+            - name: DEMO_SLOW_DELAY_MS
+              value: {{ .Values.chaos.slowDelayMs | quote }}
+            - name: DEMO_ERROR_RATE
+              value: {{ .Values.chaos.errorRate | quote }}
+            - name: MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT
+              value: {{ .Values.tracing.endpoint | quote }}
+            - name: MANAGEMENT_OTLP_METRICS_EXPORT_URL
+              value: {{ .Values.tracing.metricsEndpoint | quote }}
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            initialDelaySeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            initialDelaySeconds: 30
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
