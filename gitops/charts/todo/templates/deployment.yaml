@@ -18,6 +18,11 @@ spec:
         - name: todo
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if and .Values.metrics.enabled .Values.metrics.histogram }}
+          env:
+            - name: SPRING_APPLICATION_JSON
+              value: '{"management":{"metrics":{"distribution":{"percentiles-histogram":{"http.server.requests":true}}}}}'
+          {{- end }}
           ports:
             - name: http
               containerPort: 8080
