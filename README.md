@@ -17,6 +17,8 @@ gitops/bootstrap/     root app-of-apps (applied once by hand)
 gitops/apps/          one ArgoCD Application per app (root syncs this dir)
 gitops/argocd/        Helm values for ArgoCD itself (resource limits, metrics)
 gitops/monitoring/    Helm values + Grafana dashboards for kube-prometheus-stack
+gitops/metallb/       MetalLB address pool (the ingress VIP)
+gitops/traefik/       HelmChartConfig: Traefik replicas + VIP pin
 gitops/charts/        own charts (hello-web)
 ```
 
@@ -26,6 +28,8 @@ gitops/charts/        own charts (hello-web)
 | `root` | `gitops/bootstrap/root-app.yaml` | app-of-apps; syncs `gitops/apps/` (applied once by hand) |
 | `argocd` | argo-cd chart 10.11.7 + `gitops/argocd/values.yaml` | ArgoCD manages itself, with resource limits |
 | `podinfo` | upstream chart | third-party chart example |
+| `metallb`, `metallb-config` | metallb chart 0.16.2 + `gitops/metallb/` | L2 virtual IP `192.168.1.45` for Traefik (k3s ServiceLB disabled in `ansible/k3s.yml`) |
+| `traefik-config` | `gitops/traefik/` | k3s HelmChartConfig: Traefik at 2 replicas, pinned to the VIP |
 | `monitoring` | kube-prometheus-stack 93.1.0 + `gitops/monitoring/` | Prometheus + Grafana (`grafana.k3s.lan`), 7d retention on a `local-path` PVC, Alertmanager off |
 | `hello-web-dev`, `hello-web-prod` | ApplicationSet `hello-web-envs` | one template, per-env replicas / image tag / host |
 
@@ -89,12 +93,13 @@ Prometheus + Grafana (kube-prometheus-stack) scrape Kubernetes, ArgoCD, and any 
   4. Recommended: `argocd account update-password`, then `kubectl -n argocd delete secret argocd-initial-admin-secret`.
   Fallback if DNS or Traefik is down: `kubectl -n argocd port-forward svc/argocd-server 8080:80`, then http://localhost:8080.
 - **Open dev / prod:** add the names to `/etc/hosts` (no wildcards there; needs sudo):
-  `echo "192.168.1.40 dev.hello.k3s.lan prod.hello.k3s.lan" | sudo tee -a /etc/hosts`
+  `echo "192.168.1.45 dev.hello.k3s.lan prod.hello.k3s.lan" | sudo tee -a /etc/hosts`
   then browse to http://dev.hello.k3s.lan and http://prod.hello.k3s.lan.
 - **Network-wide names:** the nodes are on the Default VLAN (192.168.1.0/24), so clients there need no firewall change.
-  Add a local DNS record on the Cloud Gateway Max for `*.k3s.lan` -> 192.168.1.40 (or one A record per name) instead of editing every `/etc/hosts`.
-  Note this targets one node; a VIP would remove that single point of failure.
-  Other VLANs (Homelab, Guest, IOT) need a firewall rule for TCP 80 to 192.168.1.40-43 if access is wanted.
+  Add a local DNS record on the Cloud Gateway Max for `*.k3s.lan` -> 192.168.1.45, the ingress VIP (or one A record per name) instead of editing every `/etc/hosts`.
+  192.168.1.45 is a MetalLB L2 virtual IP held by whichever node is healthy, so it survives a single node failing.
+  Rollback to per-node ServiceLB: remove `disable: servicelb` from `/etc/rancher/k3s/config.yaml` on the server and restart k3s.
+  Other VLANs (Homelab, Guest, IOT) need a firewall rule for TCP 80 to 192.168.1.45 if access is wanted.
 - **Scale or re-version an env:** change `replicas` / `tag` in `gitops/apps/hello-web-envs.yaml`, push. Promote to prod by setting prod's `tag` to the version dev has been running; roll back with `git revert`.
 - **Recreate an env's pods without a version change:** `kubectl -n hello-prod rollout restart deployment/hello-web-prod`
   (rolling, no downtime; ArgoCD does not revert it).
