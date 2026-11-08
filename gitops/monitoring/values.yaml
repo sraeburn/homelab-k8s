@@ -59,8 +59,8 @@ grafana:
       enabled: true
       searchNamespace: ALL
   resources:
-    requests: { cpu: 50m, memory: 128Mi }
-    limits: { memory: 256Mi }
+    requests: { cpu: 50m, memory: 256Mi }
+    limits: { memory: 512Mi }   # 256Mi was OOMKilled at startup (Grafana 13)
 
 kube-state-metrics:
   resources:
