@@ -11,3 +11,10 @@ spec:
     service:
       annotations:
         metallb.io/loadBalancerIPs: 192.168.1.45
+    tracing:
+      sampleRate: 1.0
+      otlp:
+        enabled: true
+        http:
+          enabled: true
+          endpoint: http://tempo.tracing:4318/v1/traces
