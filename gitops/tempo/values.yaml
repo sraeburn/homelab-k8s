@@ -1,0 +1,15 @@
+# Helm values for the grafana-community/tempo chart, managed by the "tempo"
+# Application in gitops/apps/tempo.yaml. Single binary, 7d retention, OTLP in.
+tempo:
+  retention: 168h
+  reportingEnabled: false
+  memBallastSizeMbs: 0   # chart default 1024 would exceed the memory limit
+  metricsGenerator:
+    enabled: false
+  resources:
+    requests: { cpu: 50m, memory: 256Mi }
+    limits: { memory: 512Mi }
+persistence:
+  enabled: true
+  storageClassName: local-path
+  size: 5Gi
