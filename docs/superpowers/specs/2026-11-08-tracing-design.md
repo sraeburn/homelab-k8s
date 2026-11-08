@@ -22,10 +22,10 @@ Apps send OTLP directly to Tempo: Traefik over OTLP/HTTP and the todo app over O
 
 ### Tempo
 
-- New Argo CD Application `tempo` in a new `tracing` namespace (`CreateNamespace=true`), multi-source like `gitops/apps/loki.yaml`: chart `grafana/tempo` 1.24.4 (repo `https://grafana.github.io/helm-charts`) + `$values/gitops/tempo/values.yaml`. Sync policy as `loki`: automated, `prune: false`, `selfHeal: true`.
+- New Argo CD Application `tempo` in a new `tracing` namespace (`CreateNamespace=true`), multi-source like `gitops/apps/loki.yaml`: chart `tempo` 3.2.1 (Tempo 3.1.1) from repo `https://grafana-community.github.io/helm-charts` (the `grafana/tempo` chart is deprecated and moved there) + `$values/gitops/tempo/values.yaml`. Sync policy as `loki`: automated, `prune: false`, `selfHeal: true`.
 - Single binary, 1 replica; OTLP gRPC (4317) and HTTP (4318) receivers enabled.
 - Retention 168h (7d); 5Gi PVC on `local-path`; metrics generator off.
-- Resources: memory request 256Mi, limit 512Mi.
+- Resources: memory request 256Mi, limit 512Mi; `memBallastSizeMbs: 0` (the chart default of 1024 would exceed the limit).
 - In-cluster query endpoint `http://tempo.tracing:3200`.
 
 ### Traefik
