@@ -31,6 +31,7 @@ gitops/charts/        own charts (hello-web)
 | `metallb`, `metallb-config` | metallb chart 0.16.2 + `gitops/metallb/` | L2 virtual IP `192.168.1.45` for Traefik (k3s ServiceLB disabled in `ansible/k3s.yml`) |
 | `traefik-config` | `gitops/traefik/` | k3s HelmChartConfig: Traefik at 2 replicas, pinned to the VIP |
 | `monitoring` | kube-prometheus-stack 93.1.0 + `gitops/monitoring/` | Prometheus + Grafana (`grafana.k3s.lan`), 7d retention on a `local-path` PVC, Alertmanager off |
+| `loki`, `alloy` | grafana charts 7.5.0 / 1.15.0 + `gitops/loki/`, `gitops/alloy/` | Loki (single binary, 7d retention, 5Gi `local-path` PVC) + Alloy DaemonSet shipping all pod logs; see Logging |
 | `hello-web-dev`, `hello-web-prod` | ApplicationSet `hello-web-envs` | one template, per-env replicas / image tag / host |
 
 Environments (edit the list in `gitops/apps/hello-web-envs.yaml`):
@@ -80,6 +81,13 @@ Prometheus + Grafana (kube-prometheus-stack) scrape Kubernetes, ArgoCD, and any 
   hello-web shows the pattern for non-Prometheus apps (an nginx exporter sidecar, enabled with `metrics.enabled`).
 - **Add a dashboard:** commit a ConfigMap labelled `grafana_dashboard: "1"` under `gitops/monitoring/dashboards/`.
 - **Caveat:** Prometheus data lives on one node's `local-path` volume, so it is lost if that node is lost.
+
+## Logging
+Alloy (one pod per node) tails every pod's logs through the Kubernetes API and pushes them to Loki in the `logging` namespace. Logs only: no journald or node syslog, so k3s control-plane logs are not collected.
+
+- **Query:** Grafana (http://grafana.k3s.lan) > Explore > Loki datasource, e.g. `{namespace="todo"}` or `{namespace="argocd", app="argocd-server"}`.
+- **Labels:** `namespace`, `pod`, `container`, `app`. `app` comes from `app.kubernetes.io/name` or `app`, so pods that only set `k8s-app` (e.g. coredns) have none.
+- **Retention:** 7d, 5Gi `local-path` volume. That volume cannot be resized in place, and it is lost with its node.
 
 ## Day-to-day
 - **Deploy a change:** edit under `gitops/`, commit, push. ArgoCD polls about every 3 min; force it with
