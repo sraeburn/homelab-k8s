@@ -4,8 +4,14 @@ tempo:
   retention: 168h
   reportingEnabled: false
   memBallastSizeMbs: 0   # chart default 1024 would exceed the memory limit
+  # Service graph metrics (traces_service_graph_*) go to Prometheus for Grafana's service map.
   metricsGenerator:
-    enabled: false
+    enabled: true
+    remoteWriteUrl: http://monitoring-kube-prometheus-prometheus.monitoring:9090/api/v1/write
+  overrides:
+    defaults:
+      metrics_generator:
+        processors: [service-graphs]
   resources:
     requests: { cpu: 50m, memory: 256Mi }
     limits: { memory: 512Mi }
