@@ -578,6 +578,67 @@ data:
         },
         {
           "id": 13,
+          "title": "Latency heatmap (excl. actuator)",
+          "type": "heatmap",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 22,
+            "w": 24,
+            "h": 9
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "sum by (le) (rate(http_server_requests_seconds_bucket{namespace=~\"$namespace\",pod=~\"$pod\",uri!~\"/actuator.*\"}[$__rate_interval]))",
+              "legendFormat": "{{le}}",
+              "refId": "A",
+              "format": "heatmap"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "options": {
+            "calculate": false,
+            "yAxis": {
+              "unit": "s",
+              "axisPlacement": "left"
+            },
+            "cellGap": 1,
+            "color": {
+              "mode": "scheme",
+              "scheme": "Spectral",
+              "scale": "exponential",
+              "fill": "dark-orange",
+              "exponent": 0.5,
+              "steps": 64,
+              "reverse": false
+            },
+            "rowsFrame": {
+              "layout": "auto"
+            },
+            "tooltip": {
+              "mode": "single",
+              "yHistogram": true
+            },
+            "legend": {
+              "show": true
+            }
+          },
+          "description": "Request count per latency bucket over time. Needs http_server_requests_seconds_bucket (percentiles-histogram enabled)."
+        },
+        {
+          "id": 14,
           "title": "In-flight requests",
           "type": "timeseries",
           "datasource": {
@@ -586,7 +647,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 22,
+            "y": 31,
             "w": 12,
             "h": 8
           },
@@ -626,7 +687,7 @@ data:
           }
         },
         {
-          "id": 14,
+          "id": 15,
           "title": "Active sessions",
           "type": "timeseries",
           "datasource": {
@@ -635,7 +696,7 @@ data:
           },
           "gridPos": {
             "x": 12,
-            "y": 22,
+            "y": 31,
             "w": 12,
             "h": 8
           },
@@ -684,20 +745,20 @@ data:
           }
         },
         {
-          "id": 15,
+          "id": 16,
           "type": "row",
           "title": "JVM",
           "collapsed": false,
           "gridPos": {
             "x": 0,
-            "y": 30,
+            "y": 39,
             "w": 24,
             "h": 1
           },
           "panels": []
         },
         {
-          "id": 16,
+          "id": 17,
           "title": "Heap used vs max",
           "type": "timeseries",
           "datasource": {
@@ -706,7 +767,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 31,
+            "y": 40,
             "w": 12,
             "h": 8
           },
@@ -755,7 +816,7 @@ data:
           }
         },
         {
-          "id": 17,
+          "id": 18,
           "title": "Non-heap used",
           "type": "timeseries",
           "datasource": {
@@ -764,7 +825,7 @@ data:
           },
           "gridPos": {
             "x": 12,
-            "y": 31,
+            "y": 40,
             "w": 12,
             "h": 8
           },
@@ -807,7 +868,7 @@ data:
           }
         },
         {
-          "id": 18,
+          "id": 19,
           "title": "GC pause time",
           "type": "timeseries",
           "datasource": {
@@ -816,7 +877,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 39,
+            "y": 48,
             "w": 12,
             "h": 8
           },
@@ -857,7 +918,7 @@ data:
           "description": "Seconds paused per second."
         },
         {
-          "id": 19,
+          "id": 20,
           "title": "Threads",
           "type": "timeseries",
           "datasource": {
@@ -866,7 +927,7 @@ data:
           },
           "gridPos": {
             "x": 12,
-            "y": 39,
+            "y": 48,
             "w": 12,
             "h": 8
           },
@@ -915,20 +976,20 @@ data:
           }
         },
         {
-          "id": 20,
+          "id": 21,
           "type": "row",
           "title": "Resources, database and logs",
           "collapsed": false,
           "gridPos": {
             "x": 0,
-            "y": 47,
+            "y": 56,
             "w": 24,
             "h": 1
           },
           "panels": []
         },
         {
-          "id": 21,
+          "id": 22,
           "title": "CPU usage",
           "type": "timeseries",
           "datasource": {
@@ -937,7 +998,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 48,
+            "y": 57,
             "w": 12,
             "h": 8
           },
@@ -986,7 +1047,7 @@ data:
           }
         },
         {
-          "id": 22,
+          "id": 23,
           "title": "Open file descriptors",
           "type": "timeseries",
           "datasource": {
@@ -995,7 +1056,7 @@ data:
           },
           "gridPos": {
             "x": 12,
-            "y": 48,
+            "y": 57,
             "w": 12,
             "h": 8
           },
@@ -1044,7 +1105,7 @@ data:
           }
         },
         {
-          "id": 23,
+          "id": 24,
           "title": "Hikari connections",
           "type": "timeseries",
           "datasource": {
@@ -1053,7 +1114,7 @@ data:
           },
           "gridPos": {
             "x": 0,
-            "y": 56,
+            "y": 65,
             "w": 12,
             "h": 8
           },
@@ -1120,7 +1181,7 @@ data:
           }
         },
         {
-          "id": 24,
+          "id": 25,
           "title": "Log events per second by level",
           "type": "timeseries",
           "datasource": {
@@ -1129,7 +1190,7 @@ data:
           },
           "gridPos": {
             "x": 12,
-            "y": 56,
+            "y": 65,
             "w": 12,
             "h": 8
           },
