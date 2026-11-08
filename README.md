@@ -95,6 +95,7 @@ Traefik and the todo app (0.4.0+) send OTLP traces straight to Tempo (`http://te
 
 - **Find traces:** Grafana (http://grafana.k3s.lan) > Explore > Tempo, then Search (service `traefik` or `todo`) or TraceQL, e.g. `{ name = "http post /api/todos" } >> { name = "query" }`.
 - **Logs <-> traces:** the todo JSON logs carry `traceId`. In Explore > Loki the `TraceID` link opens the trace; in a trace, the logs button runs `{namespace=~".+"} |= "<traceId>"` against Loki.
+- **Service map:** Tempo's metrics generator turns spans into `traces_service_graph_*` metrics and remote-writes them to Prometheus (which accepts remote-write). Grafana draws the graph (user > traefik > todo > database) in Explore > Tempo > Service Graph and in the "OpenTelemetry for HTTP services" dashboard (grafana.com 21587). That dashboard's HTTP request panels stay empty: they need OTel-named metrics (`http_server_request_duration_seconds_*`), and the todo app exports Micrometer's `http_server_requests_seconds_*`.
 - **Turn tracing off for the app:** set `tracing.enabled: false` in `gitops/charts/todo/values.yaml` (the app then exports nothing and keeps serving requests; it also keeps working while Tempo is down).
 - **Trace another app:** export OTLP/HTTP to `http://tempo.tracing:4318/v1/traces` with a `service.name`; Traefik already forwards the W3C `traceparent` header.
 - **Caveat:** the 5Gi `local-path` volume cannot be resized in place and is lost with its node.
