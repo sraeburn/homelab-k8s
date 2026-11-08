@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metallb-config
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/sraeburn/homelab-k8s.git
+    targetRevision: main
+    path: gitops/metallb
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: metallb-system
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    retry:            # the pool CRDs come from the metallb app, which may sync later
+      limit: 5
+      backoff:
+        duration: 20s
+        factor: 2
+        maxDuration: 3m
