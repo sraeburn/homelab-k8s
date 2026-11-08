@@ -18,3 +18,8 @@ service:
 ingress:
   enabled: true
   host: todo.k3s.lan
+
+# Scrape /actuator/prometheus with a ServiceMonitor (needs the Prometheus Operator CRDs).
+metrics:
+  enabled: true
+  path: /actuator/prometheus
