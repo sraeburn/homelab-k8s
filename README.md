@@ -25,7 +25,6 @@ gitops/charts/        own charts (hello-web)
 | `root` | `gitops/bootstrap/root-app.yaml` | app-of-apps; syncs `gitops/apps/` (applied once by hand) |
 | `argocd` | argo-cd chart 10.11.7 + `gitops/argocd/values.yaml` | ArgoCD manages itself, with resource limits |
 | `podinfo` | upstream chart | third-party chart example |
-| `hello-web` | `gitops/charts/hello-web` | original app, namespace `hello-web`, catch-all Ingress |
 | `hello-web-dev`, `hello-web-prod` | ApplicationSet `hello-web-envs` | one template, per-env replicas / image tag / host |
 
 Environments (edit the list in `gitops/apps/hello-web-envs.yaml`):
@@ -73,7 +72,6 @@ kubectl apply -f gitops/bootstrap/root-app.yaml
   3. UI: browse to https://localhost:8080 (accept the self-signed cert warning), log in as `admin`.
   4. CLI: `argocd login localhost:8080 --username admin --insecure --grpc-web` (then e.g. `argocd app list`).
   5. Optional: `argocd account update-password`, then `kubectl -n argocd delete secret argocd-initial-admin-secret`.
-- **Open hello-web:** http://192.168.1.40 (any node IP; the Ingress has no host rule).
 - **Open dev / prod:** add the names to `/etc/hosts` (no wildcards there; needs sudo):
   `echo "192.168.1.40 dev.hello.k3s.lan prod.hello.k3s.lan" | sudo tee -a /etc/hosts`
   then browse to http://dev.hello.k3s.lan and http://prod.hello.k3s.lan.
