@@ -15,7 +15,8 @@ terraform/            bpg/proxmox: one cloud-init VM per entry in var.nodes
 ansible/k3s.yml       installs k3s server + agents, fetches kubeconfig
 gitops/bootstrap/     root app-of-apps (applied once by hand)
 gitops/apps/          one ArgoCD Application per app (root syncs this dir)
-gitops/argocd/        Helm values for ArgoCD itself (resource limits)
+gitops/argocd/        Helm values for ArgoCD itself (resource limits, metrics)
+gitops/monitoring/    Helm values + Grafana dashboards for kube-prometheus-stack
 gitops/charts/        own charts (hello-web)
 ```
 
@@ -25,6 +26,7 @@ gitops/charts/        own charts (hello-web)
 | `root` | `gitops/bootstrap/root-app.yaml` | app-of-apps; syncs `gitops/apps/` (applied once by hand) |
 | `argocd` | argo-cd chart 10.11.7 + `gitops/argocd/values.yaml` | ArgoCD manages itself, with resource limits |
 | `podinfo` | upstream chart | third-party chart example |
+| `monitoring` | kube-prometheus-stack 93.1.0 + `gitops/monitoring/` | Prometheus + Grafana (`grafana.k3s.lan`), 7d retention on a `local-path` PVC, Alertmanager off |
 | `hello-web-dev`, `hello-web-prod` | ApplicationSet `hello-web-envs` | one template, per-env replicas / image tag / host |
 
 Environments (edit the list in `gitops/apps/hello-web-envs.yaml`):
@@ -59,6 +61,21 @@ kubectl -n argocd port-forward svc/argocd-server 8080:443   # https://localhost:
 # 4. GitOps: push this repo to GitHub, then
 kubectl apply -f gitops/bootstrap/root-app.yaml
 ```
+
+## Monitoring
+Prometheus + Grafana (kube-prometheus-stack) scrape Kubernetes, ArgoCD, and any app with a ServiceMonitor.
+
+- **First install only:** create the namespace and the Grafana admin Secret by hand (never in Git) before the `monitoring` app syncs:
+  `kubectl create namespace monitoring`
+  `kubectl -n monitoring create secret generic grafana-admin --from-literal=admin-user=admin --from-literal=admin-password="$(openssl rand -base64 18)"`
+- **Grafana:** http://grafana.k3s.lan (needs the `*.k3s.lan` DNS record or an `/etc/hosts` entry), user `admin`. Password:
+  `kubectl -n monitoring get secret grafana-admin -o jsonpath='{.data.admin-password}' | base64 -d; echo`
+- **Prometheus** (no ingress): `kubectl -n monitoring port-forward svc/monitoring-kube-prometheus-prometheus 9090`, then http://localhost:9090 (Status > Targets).
+- **Monitor a new app:** expose `/metrics` on a named Service port and ship a ServiceMonitor selecting that Service, like
+  `gitops/charts/hello-web/templates/servicemonitor.yaml`. Prometheus picks up ServiceMonitors in every namespace, no labels needed.
+  hello-web shows the pattern for non-Prometheus apps (an nginx exporter sidecar, enabled with `metrics.enabled`).
+- **Add a dashboard:** commit a ConfigMap labelled `grafana_dashboard: "1"` under `gitops/monitoring/dashboards/`.
+- **Caveat:** Prometheus data lives on one node's `local-path` volume, so it is lost if that node is lost.
 
 ## Day-to-day
 - **Deploy a change:** edit under `gitops/`, commit, push. ArgoCD polls about every 3 min; force it with
