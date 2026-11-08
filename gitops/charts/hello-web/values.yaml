@@ -26,3 +26,17 @@ service:
 ingress:
   enabled: true
   host: ""         # empty = match any host (reachable via node IP)
+
+# Prometheus metrics: nginx stub_status (port 8081, localhost only) scraped by an
+# nginx-prometheus-exporter sidecar, plus a ServiceMonitor.
+metrics:
+  enabled: false
+  exporter:
+    image: nginx/nginx-prometheus-exporter:1.5.3
+    port: 9113
+    resources:
+      requests:
+        cpu: 10m
+        memory: 16Mi
+      limits:
+        memory: 32Mi

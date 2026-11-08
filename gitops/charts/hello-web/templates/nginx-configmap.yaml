@@ -1,0 +1,25 @@
+{{- if .Values.metrics.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "hello-web.fullname" . }}-nginx
+  labels:
+    {{- include "hello-web.labels" . | nindent 4 }}
+data:
+  default.conf: |
+    server {
+      listen 80;
+      location / {
+        root /usr/share/nginx/html;
+        index index.html index.htm;
+      }
+    }
+    server {
+      listen 8081;
+      location = /stub_status {
+        stub_status;
+        allow 127.0.0.1;
+        deny all;
+      }
+    }
+{{- end }}

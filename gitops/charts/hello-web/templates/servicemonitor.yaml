@@ -1,0 +1,15 @@
+{{- if .Values.metrics.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "hello-web.fullname" . }}
+  labels:
+    {{- include "hello-web.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "hello-web.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: metrics
+      interval: 30s
+{{- end }}

@@ -37,6 +37,8 @@ spec:
               value: '{{ .host }}'
             - name: image.tag
               value: '{{ .tag }}'
+            - name: metrics.enabled
+              value: 'true'
       destination:
         server: https://kubernetes.default.svc
         namespace: 'hello-{{ .env }}'
