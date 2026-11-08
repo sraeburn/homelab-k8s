@@ -51,6 +51,28 @@ grafana:
       access: proxy
       url: http://loki.logging:3100
       isDefault: false
+      jsonData:
+        # Turn the traceId in the app's JSON logs into a link to the trace.
+        derivedFields:
+          - name: TraceID
+            matcherRegex: '"traceId":"(\w+)"'
+            url: '$${__value.raw}'
+            datasourceUid: tempo
+    - name: Tempo
+      type: tempo
+      uid: tempo
+      access: proxy
+      url: http://tempo.tracing:3200
+      isDefault: false
+      jsonData:
+        # From a trace, jump to log lines containing its trace ID.
+        # $$ stops Grafana provisioning from expanding the variable itself.
+        tracesToLogsV2:
+          datasourceUid: loki
+          spanStartTimeShift: "-5m"
+          spanEndTimeShift: "5m"
+          customQuery: true
+          query: '{namespace=~".+"} |= "$${__trace.traceId}"'
   admin:
     existingSecret: grafana-admin
     userKey: admin-user
