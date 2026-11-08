@@ -24,6 +24,8 @@ prometheusOperator:
 prometheus:
   prometheusSpec:
     retention: 7d
+    # Accept remote-write so Tempo's metrics generator can push service graph metrics.
+    enableRemoteWriteReceiver: true
     retentionSize: 8GB
     # Select every ServiceMonitor / PodMonitor / rule / probe in all namespaces,
     # not only those carrying this release's Helm labels.
@@ -65,6 +67,9 @@ grafana:
       url: http://tempo.tracing:3200
       isDefault: false
       jsonData:
+        # Draw the service graph from the metrics Tempo's generator writes to Prometheus.
+        serviceMap:
+          datasourceUid: prometheus
         # From a trace, jump to log lines containing its trace ID.
         # $$ stops Grafana provisioning from expanding the variable itself.
         tracesToLogsV2:
