@@ -31,3 +31,5 @@ metrics:
 tracing:
   enabled: true
   endpoint: http://tempo.tracing:4318/v1/traces
+  # Push OTLP metrics (OpenTelemetry HTTP names) to Prometheus's OTLP receiver; empty disables.
+  metricsEndpoint: http://monitoring-kube-prometheus-prometheus.monitoring:9090/api/v1/otlp/v1/metrics

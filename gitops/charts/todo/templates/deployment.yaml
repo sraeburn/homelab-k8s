@@ -28,9 +28,15 @@ spec:
             {{- if .Values.tracing.enabled }}
             - name: MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT
               value: {{ .Values.tracing.endpoint | quote }}
-            # The OpenTelemetry starter also enables OTLP metrics export (to localhost); metrics go to Prometheus.
+            # The OpenTelemetry starter also enables OTLP metrics export (default localhost), so point it
+            # at Prometheus's OTLP receiver, or turn it off when no endpoint is set.
+            {{- if .Values.tracing.metricsEndpoint }}
+            - name: MANAGEMENT_OTLP_METRICS_EXPORT_URL
+              value: {{ .Values.tracing.metricsEndpoint | quote }}
+            {{- else }}
             - name: MANAGEMENT_OTLP_METRICS_EXPORT_ENABLED
               value: "false"
+            {{- end }}
             {{- end }}
           {{- end }}
           ports:

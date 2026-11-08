@@ -26,6 +26,8 @@ prometheus:
     retention: 7d
     # Accept remote-write so Tempo's metrics generator can push service graph metrics.
     enableRemoteWriteReceiver: true
+    # Accept OTLP pushes (/api/v1/otlp/v1/metrics), e.g. the todo app's OpenTelemetry HTTP metrics.
+    enableOTLPReceiver: true
     retentionSize: 8GB
     # Select every ServiceMonitor / PodMonitor / rule / probe in all namespaces,
     # not only those carrying this release's Helm labels.
