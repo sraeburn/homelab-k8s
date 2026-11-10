@@ -6,8 +6,7 @@ Proxmox VMs (Terraform) → k3s (Ansible) → ArgoCD (Helm, then self-managed) �
 |---|---|---|---|
 | k3s-server | pve1 | 192.168.1.40 | control plane |
 | k3s-agent1 | pve2 | 192.168.1.41 | agent |
-| k3s-agent2 | pve2 | 192.168.1.42 | agent |
-| k3s-agent3 | pve3 | 192.168.1.43 | agent |
+| k3s-agent2 | pve3 | 192.168.1.42 | agent |
 
 ## Layout
 ```
@@ -156,8 +155,9 @@ Traefik and the todo app (0.4.0+) send OTLP traces straight to Tempo (`http://te
 - **Deleting an app file doesn't delete its resources:** the Applications have no deletion finalizer, so `root` prunes the Application but its workloads keep running. Add `resources-finalizer.argocd.argoproj.io` to `metadata.finalizers` first for a clean uninstall.
 - **Old ReplicaSets with 0 pods are normal:** they're Deployment rollout history (`revisionHistoryLimit`, default 10).
 - **Plain `kubectl` uses `~/.kube/config`:** it now points at this cluster (context `homelab-k3s`; the old config is backed up as `~/.kube/config.bak-20261103`).
-- **Two of three agents are on pve2:** Kubernetes spreads pods across nodes, not Proxmox hosts, so a pve2 outage still removes two agents. `k3s-agent3` on pve3 keeps some capacity up.
-- **k3s version skew:** the installer pulls the latest k3s, so a node added later can be newer than the server (agent3 got v1.37.2 against v1.36.5). Agents must not be newer than the server; pin `INSTALL_K3S_VERSION` or upgrade the server first.
+- **One node per Proxmox host:** server on pve1, agent1 on pve2, agent2 on pve3, so a single host outage takes out one node.
+- **k3s version is pinned** (`k3s_version` in `ansible/k3s.yml`, both plays). Agents must not be newer than the server, so to upgrade bump it, then upgrade the server first and the agents one at a time (re-run the installer with `INSTALL_K3S_VERSION`; the playbook's `creates:` guard skips existing nodes).
+- **Moving or removing a node:** run `terraform apply` first, then `kubectl delete node <name>` and `kubectl -n kube-system delete secret <name>.node-password.k3s`. Deleting the node first lets the still-running old VM re-register it. `local-path` volumes die with the old VM: delete the PVC/PV of any stranded stateful pod (Prometheus, Loki, Tempo), or recreate the empty `/var/lib/rancher/k3s/storage/<pv>_...` directory on a node that keeps the same name.
 
 ## Exercises
 - `helm lint|template gitops/charts/hello-web`; change `replicaCount`, push, watch the sync.
