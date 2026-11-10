@@ -40,7 +40,7 @@ Environments (edit the list in `gitops/apps/hello-web-envs.yaml`):
 
 | Env | Namespace | Replicas | Image | Host |
 |---|---|---|---|---|
-| dev | `hello-dev` | 2 | nginx:1.28 | dev.hello.k3s.lan |
+| dev | `hello-dev` | 2 | nginx:1.29 | dev.hello.k3s.lan |
 | prod | `hello-prod` | 4 | nginx:1.28 | prod.hello.k3s.lan |
 
 ## One-command build
