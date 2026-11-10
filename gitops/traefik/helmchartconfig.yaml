@@ -18,3 +18,11 @@ spec:
         http:
           enabled: true
           endpoint: http://tempo.tracing:4318/v1/traces
+    # Scraped by Prometheus (per-service request counts, used by the hello-web
+    # canary analysis).
+    metrics:
+      prometheus:
+        service:
+          enabled: true
+        serviceMonitor:
+          enabled: true
