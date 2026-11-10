@@ -16,10 +16,12 @@ spec:
             replicas: "2"
             host: dev.hello.k3s.lan
             tag: "1.28"
+            steps: '[{"setWeight":50},{"pause":{"duration":"30s"}},{"setWeight":100}]'
           - env: prod
             replicas: "4"
             host: prod.hello.k3s.lan
             tag: "1.27"
+            steps: '[{"setWeight":25},{"pause":{"duration":"30s"}},{"setWeight":50},{"pause":{"duration":"30s"}},{"setWeight":100}]'
   template:
     metadata:
       name: 'hello-web-{{ .env }}'
@@ -39,6 +41,9 @@ spec:
               value: '{{ .tag }}'
             - name: metrics.enabled
               value: 'true'
+          values: |
+            rollout:
+              steps: {{ .steps }}
       destination:
         server: https://kubernetes.default.svc
         namespace: 'hello-{{ .env }}'
@@ -48,3 +53,4 @@ spec:
           selfHeal: true
         syncOptions:
           - CreateNamespace=true
+          - SkipDryRunOnMissingResource=true

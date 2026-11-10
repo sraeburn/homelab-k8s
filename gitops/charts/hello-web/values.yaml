@@ -40,3 +40,11 @@ metrics:
         memory: 16Mi
       limits:
         memory: 32Mi
+
+# Argo Rollouts canary (no traffic routing: weights are approximated by pod
+# counts, so with few replicas the steps round). Override per environment.
+rollout:
+  steps:
+    - setWeight: 50
+    - pause: {duration: 30s}
+    - setWeight: 100
