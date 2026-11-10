@@ -7,7 +7,7 @@ Proxmox VMs (Terraform) → k3s (Ansible) → ArgoCD (Helm, then self-managed) �
 | k3s-server | pve1 | 192.168.1.40 | control plane |
 | k3s-agent1 | pve2 | 192.168.1.41 | agent |
 | k3s-agent2 | pve2 | 192.168.1.42 | agent |
-| k3s-agent3 | pve3 | 192.168.1.43 | agent (planned, pve3 offline) |
+| k3s-agent3 | pve3 | 192.168.1.43 | agent |
 
 ## Layout
 ```
@@ -141,7 +141,8 @@ Traefik and the todo app (0.4.0+) send OTLP traces straight to Tempo (`http://te
 - **Deleting an app file doesn't delete its resources:** the Applications have no deletion finalizer, so `root` prunes the Application but its workloads keep running. Add `resources-finalizer.argocd.argoproj.io` to `metadata.finalizers` first for a clean uninstall.
 - **Old ReplicaSets with 0 pods are normal:** they're Deployment rollout history (`revisionHistoryLimit`, default 10).
 - **Plain `kubectl` uses `~/.kube/config`:** it now points at this cluster (context `homelab-k3s`; the old config is backed up as `~/.kube/config.bak-20261103`).
-- **Both agents are on pve2:** Kubernetes spreads pods across nodes, not Proxmox hosts. A pve2 outage takes most of prod down until `k3s-agent3` exists on pve3.
+- **Two of three agents are on pve2:** Kubernetes spreads pods across nodes, not Proxmox hosts, so a pve2 outage still removes two agents. `k3s-agent3` on pve3 keeps some capacity up.
+- **k3s version skew:** the installer pulls the latest k3s, so a node added later can be newer than the server (agent3 got v1.37.2 against v1.36.5). Agents must not be newer than the server; pin `INSTALL_K3S_VERSION` or upgrade the server first.
 
 ## Exercises
 - `helm lint|template gitops/charts/hello-web`; change `replicaCount`, push, watch the sync.
@@ -157,7 +158,6 @@ Traefik and the todo app (0.4.0+) send OTLP traces straight to Tempo (`http://te
   2. `brew install argoproj/tap/kubectl-argo-rollouts` for the plugin and dashboard.
   3. Add a chart flag so `hello-web` can render a `Rollout` (canary strategy) instead of a `Deployment`, and try it in **dev** first.
   4. Optional: manual sync gate for prod (remove `automated` from prod's sync policy in the ApplicationSet).
-- **Bring pve3 back:** uncomment the `k3s-agent3` line in `terraform.tfvars`, `terraform apply`, regenerate the inventory, re-run the playbook. New VMs get the guest agent automatically from cloud-init (see the guest-agent gotcha).
 
 ## Teardown
 `terraform destroy` in `terraform/`.
