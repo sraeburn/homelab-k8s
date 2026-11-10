@@ -18,7 +18,8 @@ gitops/argocd/        Helm values for ArgoCD itself (resource limits, metrics)
 gitops/monitoring/    Helm values + Grafana dashboards for kube-prometheus-stack
 gitops/metallb/       MetalLB address pool (the ingress VIP)
 gitops/traefik/       HelmChartConfig: Traefik replicas + VIP pin
-gitops/charts/        own charts (hello-web)
+gitops/argo-rollouts/ Helm values for Argo Rollouts (controller, dashboard)
+gitops/charts/        own charts (hello-web, todo), deployed as Rollouts
 ```
 
 ## What's deployed
@@ -32,6 +33,7 @@ gitops/charts/        own charts (hello-web)
 | `monitoring` | kube-prometheus-stack 93.1.0 + `gitops/monitoring/` | Prometheus + Grafana (`grafana.k3s.lan`), 7d retention on a `local-path` PVC, Alertmanager off |
 | `loki`, `alloy` | grafana charts 7.5.0 / 1.15.0 + `gitops/loki/`, `gitops/alloy/` | Loki (single binary, 7d retention, 5Gi `local-path` PVC) + Alloy DaemonSet shipping all pod logs; see Logging |
 | `tempo` | grafana-community tempo chart 3.2.1 + `gitops/tempo/` | Tempo (single binary, 7d retention, 5Gi `local-path` PVC) in the `tracing` namespace, OTLP on 4317/4318; see Tracing |
+| `argo-rollouts` | argo-rollouts chart 2.43.12 + `gitops/argo-rollouts/` | Controller + dashboard (`rollouts.k3s.lan`, no auth), metrics scraped by Prometheus. hello-web uses a canary (steps per env in `hello-web-envs.yaml`), todo uses blue-green with manual promotion (`todo-preview` Service) |
 | `hello-web-dev`, `hello-web-prod` | ApplicationSet `hello-web-envs` | one template, per-env replicas / image tag / host |
 
 Environments (edit the list in `gitops/apps/hello-web-envs.yaml`):
