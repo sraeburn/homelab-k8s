@@ -42,7 +42,22 @@ Environments (edit the list in `gitops/apps/hello-web-envs.yaml`):
 | dev | `hello-dev` | 2 | nginx:1.28 | dev.hello.k3s.lan |
 | prod | `hello-prod` | 4 | nginx:1.27 | prod.hello.k3s.lan |
 
-## Setup
+## One-command build
+`scripts/rebuild.sh` runs the whole Setup below (VMs, k3s, ArgoCD, the Grafana secret, root app) with no prompts and waits until every app is Synced and Healthy (about 25 min). It checks prerequisites first and changes nothing if any fail.
+
+```sh
+scripts/rebuild.sh                  # build from nothing
+scripts/rebuild.sh --check          # prerequisite checks only
+scripts/rebuild.sh --destroy --yes  # terraform destroy (deletes all VMs and volume data)
+scripts/rebuild.sh --rebuild --yes  # destroy, then build
+```
+
+- **Prerequisites:** terraform, ansible, helm, kubectl; `terraform/terraform.tfvars`; an ssh-agent key (root SSH to each PVE node); every PVE node online with `iso`, `snippets` and `images` storage; free node IPs; internet access.
+- **Not handled:** the `*.k3s.lan` DNS record and refreshing `~/.kube/config` (new kubeconfig: `ansible/k3s.kubeconfig`).
+- **Output:** prints the ArgoCD and Grafana admin passwords; Grafana's is also saved in `.rebuild/` (gitignored). Set `GRAFANA_ADMIN_PASSWORD` to choose it.
+- **Safe to re-run** after a failure; finished steps are skipped.
+
+## Setup (manual steps)
 ```sh
 brew install helm argocd
 
@@ -160,4 +175,4 @@ Traefik and the todo app (0.4.0+) send OTLP traces straight to Tempo (`http://te
   4. Optional: manual sync gate for prod (remove `automated` from prod's sync policy in the ApplicationSet).
 
 ## Teardown
-`terraform destroy` in `terraform/`.
+`scripts/rebuild.sh --destroy --yes`, or `terraform destroy` in `terraform/`.
