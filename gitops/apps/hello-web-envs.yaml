@@ -16,12 +16,14 @@ spec:
             replicas: "2"
             host: dev.hello.k3s.lan
             tag: "1.29"
+            routed: "false"
             steps: '[{"experiment":{"duration":"1m","templates":[{"name":"experiment","specRef":"canary"}]}},{"setWeight":50},{"pause":{"duration":"30s"}},{"setWeight":100}]'
           - env: prod
             replicas: "4"
             host: prod.hello.k3s.lan
             tag: "1.28"
-            steps: '[{"setWeight":25},{"pause":{"duration":"30s"}},{"setWeight":50},{"pause":{"duration":"30s"}},{"setWeight":100}]'
+            routed: "true"
+            steps: '[{"setWeight":5},{"pause":{}},{"setWeight":50},{"pause":{"duration":"2m"}},{"setWeight":100}]'
   template:
     metadata:
       name: 'hello-web-{{ .env }}'
@@ -44,6 +46,8 @@ spec:
           values: |
             rollout:
               steps: {{ .steps }}
+              trafficRouting:
+                enabled: {{ .routed }}
       destination:
         server: https://kubernetes.default.svc
         namespace: 'hello-{{ .env }}'
