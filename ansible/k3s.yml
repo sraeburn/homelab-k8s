@@ -16,9 +16,11 @@
 - name: k3s server
   hosts: server
   become: true
+  vars:
+    k3s_version: v1.37.2+k3s1   # pinned so rebuilds match; agents must never be newer than the server
   tasks:
     - name: Install k3s server
-      ansible.builtin.shell: curl -sfL https://get.k3s.io | sh -s - server --write-kubeconfig-mode 644 --tls-san {{ ansible_host }}
+      ansible.builtin.shell: curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION={{ k3s_version }} sh -s - server --write-kubeconfig-mode 644 --tls-san {{ ansible_host }}
       args:
         creates: /usr/local/bin/k3s
       register: k3s_server_install
@@ -56,12 +58,15 @@
 - name: k3s agents
   hosts: agent
   become: true
+  vars:
+    k3s_version: v1.37.2+k3s1   # keep equal to the server play above
   tasks:
     - name: Install k3s agent
       ansible.builtin.shell: >
         curl -sfL https://get.k3s.io |
         K3S_URL=https://{{ hostvars[groups['server'][0]].ansible_host }}:6443
         K3S_TOKEN={{ hostvars[groups['server'][0]].node_token.content | b64decode | trim }}
+        INSTALL_K3S_VERSION={{ k3s_version }}
         sh -s - agent
       args:
         creates: /usr/local/bin/k3s
