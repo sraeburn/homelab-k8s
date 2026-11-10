@@ -51,6 +51,16 @@ spec:
       destination:
         server: https://kubernetes.default.svc
         namespace: 'hello-{{ .env }}'
+      # The Rollout controller owns the Traefik weights and the Services' hash
+      # selectors; without this, self-heal puts the weights back to 100/0.
+      ignoreDifferences:
+        - group: traefik.io
+          kind: TraefikService
+          jsonPointers:
+            - /spec/weighted/services
+        - kind: Service
+          jqPathExpressions:
+            - '.spec.selector."rollouts-pod-template-hash"'
       syncPolicy:
         automated:
           prune: true
@@ -58,3 +68,4 @@ spec:
         syncOptions:
           - CreateNamespace=true
           - SkipDryRunOnMissingResource=true
+          - RespectIgnoreDifferences=true
