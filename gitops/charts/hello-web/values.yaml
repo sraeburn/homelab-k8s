@@ -48,3 +48,13 @@ rollout:
     - setWeight: 50
     - pause: {duration: 30s}
     - setWeight: 100
+
+# Route the canary by weight through a Traefik TraefikService instead of by pod
+# count, so small weights (e.g. 5%) work at any replica count. Replaces the
+# Ingress with a Traefik IngressRoute and adds a canary Service plus a
+# Prometheus error-rate check against Traefik's metrics.
+  trafficRouting:
+    enabled: false
+  analysis:
+    maxErrorRatio: 0.05
+    prometheusAddress: http://monitoring-kube-prometheus-prometheus.monitoring:9090

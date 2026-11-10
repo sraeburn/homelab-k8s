@@ -1,0 +1,74 @@
+{{- if .Values.rollout.trafficRouting.enabled }}
+{{- $name := include "hello-web.fullname" . }}
+# Traffic-routed canary: the Rollout rewrites the weights on the TraefikService
+# and the hash selectors on the stable and canary Services.
+#
+# The canary Service omits the selector labels so the ServiceMonitor does not
+# scrape it twice.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}-canary
+  labels:
+    app.kubernetes.io/name: {{ $name }}-canary
+spec:
+  selector:
+    {{- include "hello-web.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: 80
+---
+apiVersion: traefik.io/v1alpha1
+kind: TraefikService
+metadata:
+  name: {{ $name }}-weighted
+  labels:
+    {{- include "hello-web.labels" . | nindent 4 }}
+spec:
+  weighted:
+    services:
+      - name: {{ $name }}
+        port: {{ .Values.service.port }}
+        weight: 100
+      - name: {{ $name }}-canary
+        port: {{ .Values.service.port }}
+        weight: 0
+{{- if .Values.ingress.enabled }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "hello-web.labels" . | nindent 4 }}
+spec:
+  routes:
+    - match: {{ if .Values.ingress.host }}Host(`{{ .Values.ingress.host }}`) && {{ end }}PathPrefix(`/`)
+      kind: Rule
+      services:
+        - name: {{ $name }}-weighted
+          kind: TraefikService
+{{- end }}
+---
+# Background check while the canary runs: fails the rollout if more than
+# maxErrorRatio of the canary's requests (as counted by Traefik) are 5xx.
+# No traffic yet = no result = passes.
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {{ $name }}-canary-errors
+spec:
+  metrics:
+    - name: canary-5xx-ratio
+      interval: 1m
+      failureLimit: 2
+      successCondition: len(result) == 0 || result[0] < {{ .Values.rollout.analysis.maxErrorRatio }}
+      provider:
+        prometheus:
+          address: {{ .Values.rollout.analysis.prometheusAddress }}
+          query: |
+            sum(rate(traefik_service_requests_total{service=~"{{ .Release.Namespace }}-{{ $name }}-canary-.*",code=~"5.."}[2m]))
+            /
+            (sum(rate(traefik_service_requests_total{service=~"{{ .Release.Namespace }}-{{ $name }}-canary-.*"}[2m])) > 0)
+{{- end }}

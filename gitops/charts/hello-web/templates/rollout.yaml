@@ -11,6 +11,17 @@ spec:
       {{- include "hello-web.selectorLabels" . | nindent 6 }}
   strategy:
     canary:
+      {{- if .Values.rollout.trafficRouting.enabled }}
+      stableService: {{ include "hello-web.fullname" . }}
+      canaryService: {{ include "hello-web.fullname" . }}-canary
+      trafficRouting:
+        traefik:
+          weightedTraefikServiceName: {{ include "hello-web.fullname" . }}-weighted
+      analysis:
+        templates:
+          - templateName: {{ include "hello-web.fullname" . }}-canary-errors
+        startingStep: 1
+      {{- end }}
       steps:
         {{- toYaml .Values.rollout.steps | nindent 8 }}
   template:
