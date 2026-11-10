@@ -21,7 +21,7 @@ spec:
           - env: prod
             replicas: "4"
             host: prod.hello.k3s.lan
-            tag: "1.28"
+            tag: "1.29"
             routed: "true"
             steps: '[{"setWeight":5},{"pause":{}},{"setWeight":50},{"pause":{"duration":"2m"}},{"setWeight":100}]'
   template:
