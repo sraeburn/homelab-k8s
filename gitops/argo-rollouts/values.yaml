@@ -1,0 +1,32 @@
+# Helm values for the argo-rollouts chart, managed by the "argo-rollouts"
+# Application in gitops/apps/argo-rollouts.yaml.
+#
+# The dashboard has no authentication: anyone on the LAN can promote or abort
+# rollouts from rollouts.k3s.lan.
+controller:
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+dashboard:
+  enabled: true
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      memory: 64Mi
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    hosts:
+      - rollouts.k3s.lan
+    paths:
+      - /
