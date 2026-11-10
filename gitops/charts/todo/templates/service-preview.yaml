@@ -1,0 +1,15 @@
+# Receives the not-yet-promoted ReplicaSet during a blue-green rollout. Labelled
+# without the selector labels so the ServiceMonitor does not scrape it twice.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-preview
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}-preview
+spec:
+  selector:
+    {{- include "todo.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: http

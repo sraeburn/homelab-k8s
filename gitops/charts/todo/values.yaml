@@ -38,3 +38,8 @@ tracing:
 downstream:
   notifyUrl: http://notify.demo/api/work   # on create
   auditUrl: http://audit.demo/api/work     # on complete and delete
+
+# Argo Rollouts blue-green. false = new version waits on the preview Service
+# until promoted (dashboard, or `kubectl argo rollouts promote todo -n todo`).
+rollout:
+  autoPromotion: false

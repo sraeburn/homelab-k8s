@@ -1,5 +1,5 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: {{ .Release.Name }}
   labels:
@@ -9,6 +9,12 @@ spec:
   selector:
     matchLabels:
       {{- include "todo.selectorLabels" . | nindent 6 }}
+  strategy:
+    blueGreen:
+      activeService: {{ .Release.Name }}
+      previewService: {{ .Release.Name }}-preview
+      autoPromotionEnabled: {{ .Values.rollout.autoPromotion }}
+      scaleDownDelaySeconds: 30
   template:
     metadata:
       labels:
