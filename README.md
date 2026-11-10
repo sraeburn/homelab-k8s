@@ -41,7 +41,7 @@ Environments (edit the list in `gitops/apps/hello-web-envs.yaml`):
 | Env | Namespace | Replicas | Image | Host |
 |---|---|---|---|---|
 | dev | `hello-dev` | 2 | nginx:1.28 | dev.hello.k3s.lan |
-| prod | `hello-prod` | 4 | nginx:1.27 | prod.hello.k3s.lan |
+| prod | `hello-prod` | 4 | nginx:1.28 | prod.hello.k3s.lan |
 
 ## One-command build
 `scripts/rebuild.sh` runs the whole Setup below (VMs, k3s, ArgoCD, the Grafana secret, root app) with no prompts and waits until every app is Synced and Healthy (about 25 min). It checks prerequisites first and changes nothing if any fail.

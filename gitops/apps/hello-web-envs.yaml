@@ -20,7 +20,7 @@ spec:
           - env: prod
             replicas: "4"
             host: prod.hello.k3s.lan
-            tag: "1.27"
+            tag: "1.28"
             steps: '[{"setWeight":25},{"pause":{"duration":"30s"}},{"setWeight":50},{"pause":{"duration":"30s"}},{"setWeight":100}]'
   template:
     metadata:
